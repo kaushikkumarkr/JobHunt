@@ -131,3 +131,58 @@ class LLMManager:
         if isinstance(res_json, list) and "generated_text" in res_json[0]:
             return res_json[0]["generated_text"]
         return str(res_json)
+
+    def score_lead(self, lead) -> 'JobLead':
+        """
+        Uses LLM to analyze the full job description and score it.
+        Updates lead.match_score and lead.notes.
+        """
+        # Safety check
+        if not lead.full_description:
+            logger.warning(f"Skipping LLM score for {lead.lead_id} (No description)")
+            return lead
+
+        prompt = f"""
+        You are an expert Tech Recruiter. Analyze this job post for a "Software Engineer" or "Product Manager" role.
+        
+        Job Title: {lead.role_title}
+        Company: {lead.company}
+        Location: {lead.city}, {lead.country}
+        
+        FULL DESCRIPTION:
+        {lead.full_description[:6000]}  # Truncate to avoid context limits
+        
+        ---
+        Your Task:
+        1. Rate this job from 0.0 to 1.0 based on relevance to a modern Tech/Engineering role.
+           - 1.0 = Perfect match (Engineering, Product, Data)
+           - 0.0 = Smap, Consultant spam, Non-tech, or Irrelevant.
+        2. Provide a 1-sentence reason.
+        
+        Return STRICT JSON format:
+        {{
+            "score": 0.95,
+            "reason": "Strong match for Senior Backend role with Python usage."
+        }}
+        """
+        
+        try:
+            response_text = self.generate(prompt)
+            if not response_text:
+                return lead
+                
+            # Clean response (remove markdown fences if present)
+            clean_text = response_text.strip().replace("```json", "").replace("```", "")
+            
+            import json
+            data = json.loads(clean_text)
+            
+            # Update Lead
+            lead.match_score = float(data.get("score", lead.match_score))
+            lead.notes = f"LLM: {data.get('reason', 'No reason provided')}"
+            
+            return lead
+            
+        except Exception as e:
+            logger.error(f"Error parsing LLM response for {lead.lead_id}: {e}")
+            return lead

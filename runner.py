@@ -115,15 +115,28 @@ async def main_async():
     if candidates_to_crawl:
         await enrich_leads(candidates_to_crawl)
     
-    # 5. Finalize & Persist
+    # 5. Finalize & Persist: LLM Scoring on Full Content
     new_leads_to_save = []
     high_value_leads = []
     new_seen_ids = []
 
     for lead in candidates_to_crawl:
-        # Post-Crawl: We could re-score here if we wanted to score based on full description
-        # For now, we trust the initial pass + enrichment
-        
+        # 4.1 LLM Scoring (if enabled and crawled text exists)
+        # Now that we have the full description from crawl4ai, let's ask the LLM: "Is this ACTUALLY a match?"
+        if lead.full_description and config["llm"]["enabled"]:
+            logger.info(f"🤖 LLM Scoring: {lead.role_title}")
+            try:
+                # This updates lead.match_score and lead.notes based on deep analysis
+                lead = llm_manager.score_lead(lead)
+            except Exception as e:
+                logger.error(f"LLM Scoring failed for {lead.lead_id}: {e}")
+
+        # 4.2 Final Threshold Check
+        # If LLM says score is 0.0 or very low, we drop it.
+        if lead.match_score < config["filters"]["roles"]["match_score_threshold"]:
+            logger.info(f"Dropping lead {lead.role_title} (Score: {lead.match_score})")
+            continue
+
         new_leads_to_save.append(lead)
         new_seen_ids.append(lead.lead_id)
         seen_ids.add(lead.lead_id) 
