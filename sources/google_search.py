@@ -74,6 +74,27 @@ class GoogleSearchSource(BaseSource):
             # Jobs Query (Standard)
             queries.append(f'site:linkedin.com/jobs {roles_query_part} {location_phrase}')
 
+        # ---------------------------------------------------------
+        # 🧠 DYNAMIC AI QUERY GENERATION
+        # Ask LLM to invent 2-3 "Creative" queries to catch what we missed
+        # ---------------------------------------------------------
+        if self.config["llm"]["enabled"]:
+             try:
+                 from llm.manager import LLMManager
+                 llm = LLMManager()
+                 # We assume the first batch represents the core roles
+                 core_roles = role_batches[0] if role_batches else ["Software Engineer"]
+                 
+                 ai_queries = llm.generate_search_queries(core_roles, intent_phrase)
+                 for aq in ai_queries:
+                     # Safety: Ensure they target linkedin/US to avoid waste
+                     if "site:" not in aq: aq = f"site:linkedin.com/posts {aq}"
+                     if "United States" not in aq and "USA" not in aq: aq += ' "United States"'
+                     
+                     queries.append(aq)
+             except Exception as e:
+                 logger.warning(f"Dynamic Query Generation skipped: {e}")
+
         logger.info(f"Running Google Search: {len(role_batches)} batches, {len(queries)} total queries (Target: ~4/hour).")
         
         for q in queries:

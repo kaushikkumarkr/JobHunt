@@ -185,4 +185,48 @@ class LLMManager:
             
         except Exception as e:
             logger.error(f"Error parsing LLM response for {lead.lead_id}: {e}")
-            return lead
+    def generate_search_queries(self, roles: List[str], intent_phrases: str) -> List[str]:
+        """
+        Generates creative, dynamic boolean queries to find hidden gems.
+        """
+        try:
+            roles_str = ", ".join(roles[:3]) # Context
+            prompt = f"""
+            Act as an expert Tech Sourcer (Headhunter).
+            Your goal is to find hidden job posts on LinkedIn that standard keyword searches miss.
+            
+            Standard Query: site:linkedin.com/posts {intent_phrases} ({roles_str})
+            
+            Task:
+            Generate 3 ALTERNATIVE, CREATIVE boolean search queries to find the same roles but using different "signals".
+            Examples of signals:
+            - "Series A funding"
+            - "stealth mode"
+            - "founding engineer"
+            - "legacy code" (hiring to fix it)
+            - "greenfield project"
+            
+            Return ONLY a raw JSON list of strings. DO NOT explain.
+            Example:
+            [
+                "site:linkedin.com/posts \"stealth mode\" AND (\"hiring\" OR \"join us\") AND \"backend\"",
+                "site:linkedin.com/posts \"greenfield\" AND \"engineer\" AND \"hiring\""
+            ]
+            """
+            
+            resp = self.generate(prompt)
+            if not resp: return []
+            
+            import json
+            clean_text = resp.strip().replace("```json", "").replace("```", "")
+            queries = json.loads(clean_text)
+            
+            if isinstance(queries, list):
+                logger.info(f"🧠 LLM Generated {len(queries)} dynamic queries.")
+                return queries[:3] # Limit to 3 to be safe
+                
+            return []
+            
+        except Exception as e:
+            logger.error(f"Failed to generate dynamic queries: {e}")
+            return []
