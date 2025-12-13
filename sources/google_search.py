@@ -61,9 +61,9 @@ class GoogleSearchSource(BaseSource):
             roles_query_part = f"({roles_str})"
             
             # Add queries for this batch
-            # Intent: Signals of a HUMAN (Manager/CEO) posting
-            # "dm me", "send me", "reach out" -> Very strong indicators of personal posts
-            intent_phrase = '("hiring" OR "join my team" OR "looking for" OR "dm me" OR "send me your resume" OR "message me" OR "reach out" OR "#hiring")'
+            # Intent: Signals of a HUMAN (Manager/Lead/Recruiter) posting
+            # "join my team", "I'm hiring", "DM me" -> Strong personal signals
+            intent_phrase = '("hiring" OR "join my team" OR "looking for" OR "dm me" OR "send me your resume" OR "message me" OR "reach out" OR "#hiring" OR "I am hiring" OR "my team is hiring")'
             
             # Location: US Variants + Remote
             location_phrase = '(US OR USA OR "United States" OR "U.S." OR remote)'
