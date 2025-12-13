@@ -97,10 +97,23 @@ async def main_async():
         lead.country = loc_data["country"]
         lead.remote_type = loc_data["remote_type"]
         
-        # 1. Geo Filter
-        if config["filters"]["geo"]["allowed_countries"] and "USA" not in lead.country:
-             if not loc_data["is_us"]:
-                 continue
+        # 1. Geo Filter (STRICT)
+        # config has "allowed_countries": ["USA"]
+        allowed = config["filters"]["geo"]["allowed_countries"]
+        if allowed:
+            # If parser found a country, and it is NOT in allowed list -> DROP
+            if loc_data["country"] and loc_data["country"] not in allowed:
+                # logger.info(f"Skipping {lead.company} (Country: {loc_data['country']})")
+                continue
+            
+            # If parser matched "is_us": False -> DROP
+            if not loc_data["is_us"] and "USA" in allowed:
+                continue
+                
+            # Extra Safety: Explicitly block common leaks like "India", "UK" if not allowed
+            raw_lower = lead.location_raw.lower()
+            if "india" in raw_lower or "bengaluru" in raw_lower or "chennai" in raw_lower:
+                continue
 
         # 2. Tech Filter (Initial Pass on Title/Snippet)
         lead = tech_filter.process_lead(lead)
