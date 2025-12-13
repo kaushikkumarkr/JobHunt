@@ -69,7 +69,7 @@ class GoogleSearchSource(BaseSource):
         role_batches = [active_batch] 
         
         for batch in role_batches:
-             if not batch: continue
+            if not batch: continue
             
             roles_str = " OR ".join([f'"{r}"' for r in batch])
             roles_query_part = f"({roles_str})"
