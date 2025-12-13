@@ -75,8 +75,8 @@ class GoogleSearchSource(BaseSource):
                     res = self.service.cse().list(
                         q=q, 
                         cx=self.cse_id,
-                        # Recency: Last 2 hours to catch "just now" posts
-                        dateRestrict='h2', 
+                        # Recency: Last 24 hours (1 day) to increase volume
+                        dateRestrict='d1', 
                         sort='date',
                         lr='lang_en', # Force English results to filter out SEO spam
                         num=10

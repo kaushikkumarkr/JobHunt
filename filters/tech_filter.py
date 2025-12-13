@@ -45,7 +45,11 @@ class TechFilter:
             raw_score = 0.5 + (len(hits) * 0.1)
             lead.match_score = min(raw_score, 1.0)
         else:
-            lead.match_score = 0.0
+            # Permissive Mode: If no keywords found, but no bad words found either,
+            # give it a "Maybe" score so we can crawl it and let the LLM decide.
+            # Snippets are often too short to contain specific tech stack keywords.
+            lead.match_score = 0.1
+            lead.notes = "Snippet vague, need deep crawl to confirm."
 
         # 3. Categorize Role
         lead.role_category = self._categorize(lead.role_title)
