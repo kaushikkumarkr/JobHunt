@@ -28,6 +28,8 @@ class JobLead(BaseModel):
     link: str
     apply_link: str = ""
     match_score: float = 0.0
+    full_description: str = "" # Full markdown content from crawl4ai
+    crawled_at: str = "" # Timestamp of crawl
     matched_keywords: str = ""
     status: str = "new"
     notes: str = ""

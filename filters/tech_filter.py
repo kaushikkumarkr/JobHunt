@@ -21,6 +21,13 @@ class TechFilter:
                 lead.notes = f"Excluded by keyword: {bad_word}"
                 return lead
 
+        # 1.5 Anti-Spam (Non-English characters)
+        # Reject if title contains common non-English ranges (Chinese, Cyrillic, etc.)
+        if re.search(r"[\u4e00-\u9fff\u0400-\u04FF]", lead.role_title):
+            lead.match_score = 0.0
+            lead.notes = "Excluded: Non-English characters detected"
+            return lead
+
         # 2. Check Include Keywords & Calculate Score
         hits = []
         for word in self.filters["include_keywords"]:

@@ -20,7 +20,7 @@ storage:
 # Sources
 sources:
   ats_scrapers:
-    enabled: true
+    enabled: false # Disabled per user request (was WeWorkRemotely + DuckDuckGo)
     # List of ATS domains or identifiers to focus on
     target_ats:
       - greenhouse
@@ -69,7 +69,7 @@ filters:
     include_remote_us: true
     
   roles:
-    match_score_threshold: 0.65
+    match_score_threshold: 0.1
     tech_role_categories:
       - backend
       - frontend
@@ -81,6 +81,8 @@ filters:
       - mobile
       - qa-automation
       - technical-support-engineer
+      - product
+      - business
       
     include_keywords:
       - software engineer
@@ -104,6 +106,11 @@ filters:
       - test engineer
       - systems engineer
       - solutions engineer
+      - product manager
+      - product owner
+      - business analyst
+      - data analyst
+      - analytics
       
     exclude_keywords:
       - sales

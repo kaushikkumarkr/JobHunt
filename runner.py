@@ -25,7 +25,10 @@ def generate_lead_id(lead: JobLead) -> str:
     raw = f"{lead.company.lower()}{lead.role_title.lower()}{lead.link}"
     return hashlib.sha256(raw.encode('utf-8')).hexdigest()
 
-def main():
+import asyncio
+from utils.crawler import enrich_leads
+
+async def main_async():
     logger = setup_logging()
     logger.info("Starting Job Finder Run...")
     
@@ -67,18 +70,16 @@ def main():
         logger.info("Fetching Gmail leads...")
         all_raw_leads.extend(gmail_source.fetch_leads())
         
-    logger.info(f"Fetched {len(all_raw_leads)} raw leads.")
+    # 3.5 Pre-Filter Candidates
+    # We only want to crawl leads that look promising (English, relevant title).
+    candidates_to_crawl = []
+    skipped_ids = 0
     
-    # 4. Process & Filter
-    new_leads_to_save = []
-    high_value_leads = []
-    
-    new_seen_ids = []
-
     for lead in all_raw_leads:
         # ID Generation
         lid = generate_lead_id(lead)
         if lid in seen_ids:
+            skipped_ids += 1
             continue
         
         lead.lead_id = lid
@@ -94,31 +95,40 @@ def main():
         lead.country = loc_data["country"]
         lead.remote_type = loc_data["remote_type"]
         
-        # Filter: US Only Check
+        # 1. Geo Filter
         if config["filters"]["geo"]["allowed_countries"] and "USA" not in lead.country:
-             # Skip non-US if strict
-             # But if location parser says "Other", we skip.
-             # If remote, we might be lenient? Let's check "is_us" flag.
              if not loc_data["is_us"]:
                  continue
 
-        # Tech Filter & Scoring
+        # 2. Tech Filter (Initial Pass on Title/Snippet)
         lead = tech_filter.process_lead(lead)
         
         if lead.match_score < config["filters"]["roles"]["match_score_threshold"]:
+            # Drop spam/irrelevant BEFORE crawling
             continue
             
-        # Optional: LLM Refinement for ambiguous high-potential leads
-        # If score is good but some fields missing? 
-        # For now, just keep it simple as per "Minimize User" rule.
+        candidates_to_crawl.append(lead)
         
-        # Finalize
+    logger.info(f"Identified {len(candidates_to_crawl)} leads to crawl (Skipped {skipped_ids} duplicates/low-quality).")
+    
+    # 4. Deep Crawl / Enrichment
+    if candidates_to_crawl:
+        await enrich_leads(candidates_to_crawl)
+    
+    # 5. Finalize & Persist
+    new_leads_to_save = []
+    high_value_leads = []
+    new_seen_ids = []
+
+    for lead in candidates_to_crawl:
+        # Post-Crawl: We could re-score here if we wanted to score based on full description
+        # For now, we trust the initial pass + enrichment
+        
         new_leads_to_save.append(lead)
-        new_seen_ids.append(lid)
-        seen_ids.add(lid) # Update local set to avoid double counting in same run
+        new_seen_ids.append(lead.lead_id)
+        seen_ids.add(lead.lead_id) 
         
         # Note high value
-        # Fallback to discord threshold or default 0.85
         threshold = 0.85
         if "discord" in config["notifications"] and "alert_threshold" in config["notifications"]["discord"]:
              threshold = config["notifications"]["discord"]["alert_threshold"]
@@ -126,7 +136,6 @@ def main():
         if lead.match_score >= threshold:
             high_value_leads.append(lead)
 
-    # 5. Persist
     if new_leads_to_save:
         # Convert Pydantic to dict
         leads_dicts = [l.dict() for l in new_leads_to_save]
@@ -134,20 +143,19 @@ def main():
         store.add_seen_ids(new_seen_ids)
         
     logger.info(f"Saved {len(new_leads_to_save)} new leads.")
-
+    
     # 6. Notifications
-    # Instant
     for lead in high_value_leads:
         instant_notifier.notify(lead)
         
-    # Hourly Digest
     if new_leads_to_save:
-        # Sort by score
         sorted_leads = sorted(new_leads_to_save, key=lambda x: x.match_score, reverse=True)
-        # Send top 20 in digest
         email_notifier.send_digest(sorted_leads[:20])
-
+    
     logger.info("Run Complete.")
+
+def main():
+    asyncio.run(main_async())
 
 if __name__ == "__main__":
     main()
