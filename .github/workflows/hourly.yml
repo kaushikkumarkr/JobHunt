@@ -22,10 +22,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        playwright install chromium
 
     - name: Run Job Finder
       env:
-        # Google
+        # Core Secrets
+        GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
+        GOOGLE_SEARCH_ENGINE_ID: ${{ secrets.GOOGLE_SEARCH_ENGINE_ID }}
+        SHEET_ID: ${{ secrets.SHEET_ID }}
+        
+        # Google Auth (Base64 Encoded service_account.json)
         GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64 }}
         
         # Optional: If using Gmail User OAuth flow needing a token
