@@ -65,8 +65,8 @@ class GoogleSearchSource(BaseSource):
             # "join my team", "I'm hiring", "DM me" -> Strong personal signals
             intent_phrase = '("hiring" OR "join my team" OR "looking for" OR "dm me" OR "send me your resume" OR "message me" OR "reach out" OR "#hiring" OR "I am hiring" OR "my team is hiring")'
             
-            # Location: US Variants + Remote
-            location_phrase = '(US OR USA OR "United States" OR "U.S." OR remote)'
+            # Location: STRICT US Only (Removed broad 'remote' which captures global)
+            location_phrase = '("United States" OR "USA" OR "U.S.")'
             
             # Posts Query
             queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} {location_phrase}')
