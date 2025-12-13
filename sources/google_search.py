@@ -41,7 +41,8 @@ class GoogleSearchSource(BaseSource):
                 res = self.service.cse().list(
                     q=q, 
                     cx=self.cse_id,
-                    dateRestrict='d1', # Recent only!
+                    dateRestrict='h2', # Last 2 hours only (matches hourly run schedule)
+                    sort='date',       # Explicitly sort by date
                     num=10
                 ).execute()
 
