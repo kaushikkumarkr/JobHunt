@@ -82,16 +82,16 @@ class GoogleSearchSource(BaseSource):
              try:
                  from llm.manager import LLMManager
                  llm = LLMManager()
-                 # We assume the first batch represents the core roles
-                 core_roles = role_batches[0] if role_batches else ["Software Engineer"]
                  
-                 ai_queries = llm.generate_search_queries(core_roles, intent_phrase)
-                 for aq in ai_queries:
-                     # Safety: Ensure they target linkedin/US to avoid waste
-                     if "site:" not in aq: aq = f"site:linkedin.com/posts {aq}"
-                     if "United States" not in aq and "USA" not in aq: aq += ' "United States"'
-                     
-                     queries.append(aq)
+                 # Generate creative queries for ALL role batches, not just the first one
+                 for batch_roles in role_batches:
+                     ai_queries = llm.generate_search_queries(batch_roles, intent_phrase)
+                     for aq in ai_queries:
+                         # Safety: Ensure they target linkedin/US to avoid waste
+                         if "site:" not in aq: aq = f"site:linkedin.com/posts {aq}"
+                         if "United States" not in aq and "USA" not in aq: aq += ' "United States"'
+                         
+                         queries.append(aq)
              except Exception as e:
                  logger.warning(f"Dynamic Query Generation skipped: {e}")
 
