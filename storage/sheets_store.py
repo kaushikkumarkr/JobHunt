@@ -38,22 +38,37 @@ class SheetsStore:
         
         if env_creds_b64:
             try:
-                # Heuristic: If it looks like JSON, assume user pasted raw JSON
-                if env_creds_b64.strip().startswith("{") and "private_key" in env_creds_b64:
-                     logger.info("Detected raw JSON in secrets, skipping Base64 decode.")
-                     creds_json = json.loads(env_creds_b64)
-                else:
-                     # Standard path: Base64 decode
-                     # Handle potential newlines from copy-paste
-                     cleaned_b64 = env_creds_b64.strip().replace("\n", "").replace("\r", "")
-                     decoded_bytes = base64.b64decode(cleaned_b64)
-                     creds_string = decoded_bytes.decode('utf-8')
-                     creds_json = json.loads(creds_string)
+                # 1. Clean the input (remove smart quotes, etc)
+                input_str = env_creds_b64.strip().replace("”", '"').replace("“", '"')
                 
+                # 2. Try regex extraction of JSON object
+                # This finds the first { ... } block, ignoring surrounding garbage
+                import re
+                json_match = re.search(r'(\{.*\})', input_str, re.DOTALL)
+                
+                creds_json = None
+                if json_match:
+                    try:
+                        logger.info("Attempting to parse extracted JSON from secret...")
+                        creds_json = json.loads(json_match.group(1))
+                    except json.JSONDecodeError:
+                        pass # Extracted part wasn't valid JSON, fall through
+
+                # 3. If Regex failed, try Base64 decode
+                if not creds_json:
+                    # Handle standard Base64
+                    cleaned_b64 = input_str.replace("\n", "").replace("\r", "")
+                    # Padding fix
+                    cleaned_b64 += "=" * ((4 - len(cleaned_b64) % 4) % 4)
+                    
+                    decoded_bytes = base64.b64decode(cleaned_b64)
+                    creds_string = decoded_bytes.decode('utf-8', errors='ignore') # Ignore bad chars
+                    creds_json = json.loads(creds_string)
+
                 creds = Credentials.from_service_account_info(creds_json, scopes=SCOPES)
             
             except Exception as e:
-                # Log snippet for debug (safe length)
+                # Log snippet for debug
                 safe_snippet = env_creds_b64[:10] + "..." if env_creds_b64 else "Empty"
                 logger.error(f"Failed to load credentials from env var (Start: {safe_snippet}). Error: {e}")
         
