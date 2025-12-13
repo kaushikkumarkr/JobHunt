@@ -8,21 +8,13 @@ from utils.retries import retry_with_backoff
 logger = logging.getLogger(__name__)
 
 class ATSScraper(BaseSource):
-    def __init__(self, target_companies: List[Dict[str, str]] = None):
-        """
-        target_companies: List of dicts with 'name', 'ats_url', 'type' (greenhouse, lever, etc)
-        For this simplified version, we'll demonstrate searching or hitting known public boards.
-        Since we don't have a giant list of companies, we'll implement the logic to scrape 
-        IF we are given a URL.
-        
-        In a real runner, you'd feed this a list of company careers page URLs.
-        """
+    def __init__(self):
         super().__init__()
-        # Example seed list - in production this might come from a config or database
-        self.targets = [
-            # {"name": "Example Corp", "url": "https://boards.greenhouse.io/example", "type": "greenhouse"},
-            # In a real run, you'd populate this.
-        ]
+        self.config = get_config()
+        # Load targets directly from config
+        self.targets = self.config["sources"]["ats_scrapers"].get("targets", [])
+        
+        logger.info(f"Initialized ATS Scraper with {len(self.targets)} target companies.")
         
     @retry_with_backoff(retries=3)
     def _get_page(self, url: str):
@@ -41,11 +33,9 @@ class ATSScraper(BaseSource):
             except Exception as e:
                 logger.error(f"Failed to scrape {target['name']}: {e}")
                 
-        # 2. Dynamic Discovery (The "Search" feature)
-        # We assume if targets is empty or always, we might want to discover.
-        # Let's do discovery for "Software Engineer" on ATS sites
-        discovered_leads = self._discover_leads()
-        leads.extend(discovered_leads)
+        # 2. Dynamic Discovery (Disabled to focus on High-Quality Targets)
+        # discovered_leads = self._discover_leads()
+        # leads.extend(discovered_leads)
         
         return leads
 

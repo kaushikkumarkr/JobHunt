@@ -48,14 +48,19 @@ async def main_async():
     email_notifier = EmailNotifier()
     instant_notifier = InstantNotifier()
     
-    # 3. Fetch Leads
-    all_raw_leads = []
-    
-    # ATS
+    # 2.2 ATS Scraper (Direct Company Boards)
+    ats_leads = []
     if config["sources"]["ats_scrapers"]["enabled"]:
-        logger.info("Fetching ATS leads...")
-        all_raw_leads.extend(ats_source.fetch_leads())
-        
+        # from sources.ats_scrapers import ATSScraper # Already imported at the top
+        ats_source = ATSScraper()
+        logger.info("Running parallel ATS Scraper...")
+        ats_leads = await asyncio.to_thread(ats_source.fetch_leads)
+        logger.info(f"ATS Scraper found {len(ats_leads)} leads.")
+
+    # 3. Combine & Dedup
+    all_raw_leads = []
+    all_raw_leads.extend(ats_leads) # Add ATS leads here
+
     # Google Search
     if config["sources"]["google_search"]["enabled"]:
         logger.info("Fetching Google Search leads...")

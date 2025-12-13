@@ -20,15 +20,70 @@ storage:
 # Sources
 sources:
   ats_scrapers:
-    enabled: false # Disabled per user request (was WeWorkRemotely + DuckDuckGo)
-    # List of ATS domains or identifiers to focus on
-    target_ats:
-      - greenhouse
-      - lever
-      - ashby
-      - workable
-      - smartrecruiters
-      - bamboohr
+    enabled: true 
+    # Direct scraping of high-value career pages (Greenhouse/Lever)
+    # This runs PARALLEL to Google Search.
+    targets:
+      - name: "OpenAI"
+        url: "https://boards.greenhouse.io/openai"
+        type: "greenhouse"
+      - name: "Anthropic"
+        url: "https://jobs.lever.co/anthropic"
+        type: "lever"
+      - name: "Stripe"
+        url: "https://boards.greenhouse.io/stripe"
+        type: "greenhouse"
+      - name: "Airbnb"
+        url: "https://careers.airbnb.com/positions/" # Often wraps greenhouse
+        type: "greenhouse"
+      - name: "Discord"
+        url: "https://boards.greenhouse.io/discord"
+        type: "greenhouse"
+      - name: "Linear"
+        url: "https://jobs.ashbyhq.com/linear"
+        type: "ashby"
+      - name: "Retool"
+        url: "https://boards.greenhouse.io/retool"
+        type: "greenhouse"
+      - name: "Rippling"
+        url: "https://boards.greenhouse.io/rippling"
+        type: "greenhouse"
+      - name: "Scale AI"
+        url: "https://boards.greenhouse.io/scaleai"
+        type: "greenhouse"
+      - name: "Databricks"
+        url: "https://boards.greenhouse.io/databricks"
+        type: "greenhouse"
+      - name: "Anduril"
+        url: "https://boards.greenhouse.io/andurilindustries"
+        type: "greenhouse"
+      - name: "Figma"
+        url: "https://boards.greenhouse.io/figma"
+        type: "greenhouse"
+      - name: "Notion"
+        url: "https://boards.greenhouse.io/notion"
+        type: "greenhouse"
+      - name: "Pinterest"
+        url: "https://boards.greenhouse.io/pinterest"
+        type: "greenhouse"
+      - name: "Lyft"
+        url: "https://boards.greenhouse.io/lyft"
+        type: "greenhouse"
+      - name: "DoorDash"
+        url: "https://boards.greenhouse.io/doordash"
+        type: "greenhouse"
+      - name: "Plaid"
+        url: "https://boards.greenhouse.io/plaid"
+        type: "greenhouse"
+      - name: "Brex"
+        url: "https://boards.greenhouse.io/brex"
+        type: "greenhouse"
+      - name: "Vercel"
+        url: "https://boards.greenhouse.io/vercel"
+        type: "greenhouse"
+      - name: "Replit"
+        url: "https://boards.greenhouse.io/replit"
+        type: "greenhouse"
     
   gmail_ingest:
     enabled: true
