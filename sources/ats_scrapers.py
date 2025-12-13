@@ -4,6 +4,7 @@ import logging
 from typing import List, Dict
 from sources.base import BaseSource, JobLead
 from utils.retries import retry_with_backoff
+from config.loader import get_config
 
 logger = logging.getLogger(__name__)
 
