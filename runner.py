@@ -48,14 +48,11 @@ async def main_async():
     email_notifier = EmailNotifier()
     instant_notifier = InstantNotifier()
     
-    # 2.2 ATS Scraper (Direct Company Boards)
+    # 2.2 ATS Scraper (Manual List) - DISABLED
+    # We now use Google Search "Reddit Hack" to find these dynamically.
     ats_leads = []
-    if config["sources"]["ats_scrapers"]["enabled"]:
-        # from sources.ats_scrapers import ATSScraper # Already imported at the top
-        ats_source = ATSScraper()
-        logger.info("Running parallel ATS Scraper...")
-        ats_leads = await asyncio.to_thread(ats_source.fetch_leads)
-        logger.info(f"ATS Scraper found {len(ats_leads)} leads.")
+    # if config["sources"]["ats_scrapers"]["enabled"]:
+    #    ...
 
     # 3. Combine & Dedup
     all_raw_leads = []

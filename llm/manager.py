@@ -218,9 +218,26 @@ class LLMManager:
             if not resp: return []
             
             import json
-            clean_text = resp.strip().replace("```json", "").replace("```", "")
-            queries = json.loads(clean_text)
+            import re
             
+            # Clean response (remove markdown fences if present)
+            clean_text = resp.strip()
+            # aggressive cleanup
+            if "```" in clean_text:
+                clean_text = clean_text.split("```json")[-1].split("```")[0].strip()
+            
+            # Attempt to find list pattern [ ... ]
+            list_match = re.search(r'\[.*\]', clean_text, re.DOTALL)
+            if list_match:
+                clean_text = list_match.group(0)
+
+            try:
+                queries = json.loads(clean_text)
+            except json.JSONDecodeError:
+                # Fallback: simple line split if JSON fails
+                logger.warning("JSON parse failed for queries, using line split fallback")
+                queries = [line.strip().strip('"').strip(',') for line in clean_text.split('\n') if "site:" in line]
+
             if isinstance(queries, list):
                 logger.info(f"🧠 LLM Generated {len(queries)} dynamic queries.")
                 return queries[:3] # Limit to 3 to be safe

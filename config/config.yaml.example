@@ -24,29 +24,18 @@ sources:
     # Direct scraping of high-value career pages (Greenhouse/Lever)
     # This runs PARALLEL to Google Search.
     targets:
-      - name: "OpenAI"
-        url: "https://boards.greenhouse.io/openai"
-        type: "greenhouse"
-      - name: "Anthropic"
-        url: "https://jobs.lever.co/anthropic"
-        type: "lever"
+      # --- Verified Direct Boards ---
       - name: "Stripe"
         url: "https://boards.greenhouse.io/stripe"
-        type: "greenhouse"
-      - name: "Airbnb"
-        url: "https://careers.airbnb.com/positions/" # Often wraps greenhouse
         type: "greenhouse"
       - name: "Discord"
         url: "https://boards.greenhouse.io/discord"
         type: "greenhouse"
-      - name: "Linear"
-        url: "https://jobs.ashbyhq.com/linear"
-        type: "ashby"
-      - name: "Retool"
-        url: "https://boards.greenhouse.io/retool"
+      - name: "Figma"
+        url: "https://boards.greenhouse.io/figma"
         type: "greenhouse"
-      - name: "Rippling"
-        url: "https://boards.greenhouse.io/rippling"
+      - name: "Anduril"
+        url: "https://boards.greenhouse.io/andurilindustries"
         type: "greenhouse"
       - name: "Scale AI"
         url: "https://boards.greenhouse.io/scaleai"
@@ -54,17 +43,8 @@ sources:
       - name: "Databricks"
         url: "https://boards.greenhouse.io/databricks"
         type: "greenhouse"
-      - name: "Anduril"
-        url: "https://boards.greenhouse.io/andurilindustries"
-        type: "greenhouse"
-      - name: "Figma"
-        url: "https://boards.greenhouse.io/figma"
-        type: "greenhouse"
       - name: "Notion"
         url: "https://boards.greenhouse.io/notion"
-        type: "greenhouse"
-      - name: "Pinterest"
-        url: "https://boards.greenhouse.io/pinterest"
         type: "greenhouse"
       - name: "Lyft"
         url: "https://boards.greenhouse.io/lyft"
@@ -84,6 +64,17 @@ sources:
       - name: "Replit"
         url: "https://boards.greenhouse.io/replit"
         type: "greenhouse"
+      
+      # --- Requires Custom Scraper / URL Discovery (Commented out to prevent 404s) ---
+      # - name: "OpenAI" (Custom Page)
+      #   url: "https://openai.com/careers"
+      #   type: "custom"
+      # - name: "Anthropic" (Custom Page)
+      #   url: "https://anthropic.com/careers" 
+      #   type: "custom"
+      # - name: "Airbnb"
+      #   url: "https://careers.airbnb.com/positions/"
+      #   type: "greenhouse"
     
   gmail_ingest:
     enabled: true

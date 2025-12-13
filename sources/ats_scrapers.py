@@ -155,7 +155,15 @@ class ATSScraper(BaseSource):
                 if not a_tag: continue
                 
                 title = a_tag.get_text(strip=True)
-                link = "https://boards.greenhouse.io" + a_tag["href"] if a_tag["href"].startswith("/") else a_tag["href"]
+                # Correct relative URL handling
+                href = a_tag["href"]
+                if href.startswith("http"):
+                    link = href
+                else:
+                    # Ensure no double slashes if base has one and href has one
+                    base = "https://boards.greenhouse.io"
+                    link = base + href if href.startswith("/") else base + "/" + href
+                
                 location = job.select_one("span.location").get_text(strip=True) if job.select_one("span.location") else ""
                 
                 lead = JobLead(
