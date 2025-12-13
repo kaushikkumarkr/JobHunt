@@ -38,6 +38,13 @@ sources:
     enabled: true
     # The roles you want to search for
     roles:
+      - "Data Science Engineer"
+      - "Machine Learning Engineer"
+      - "AI Engineer"
+      - "Product Manager"
+      - "Data Analyst"
+      - "Business Analyst"
+      - "Data Engineer"
       - "Software Engineer"
       - "Full Stack Developer"
       - "Backend Engineer"

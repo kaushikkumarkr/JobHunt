@@ -30,14 +30,39 @@ class GoogleSearchSource(BaseSource):
         roles = self.config["sources"]["google_search"].get("roles", ["Software Engineer"])
         location = self.config["sources"]["google_search"].get("location", "United States")
         
-        queries = []
         leads = []
-        for role in roles:
-             # Add specific queries for each role
-             queries.append(f'site:linkedin.com/posts "hiring" "{role}" "{location}"')
-             queries.append(f'site:linkedin.com/jobs "{role}" "{location}"')
+        
+        # Maximize Quota: User has 100 queries/day. 
+        # Hourly runs = 24 runs/day.
+        # Queries per run allowed = 100 / 24 ~= 4.
+        # We perform 2 query types (posts + jobs).
+        # So we can run 2 separate batches of roles per hour (2 batches * 2 types = 4 queries).
+        
+        # Split roles into 2 chunks if possible to get better/more specific results
+        # instead of one giant OR query that might dilute detailed matches.
+        
+        chunk_size = (len(roles) + 1) // 2
+        role_batches = [roles[i:i + chunk_size] for i in range(0, len(roles), chunk_size)]
+        
+        # Ensure we don't exceed 2 batches (4 queries) even if list is huge, 
+        # to respect the 100/day limit strictly.
+        if len(role_batches) > 2:
+            # Fallback: flatten back to 2 chunks if math goes weird or list is tiny
+            mid = len(roles) // 2
+            role_batches = [roles[:mid], roles[mid:]]
 
-        logger.info(f"Running Google Custom Search for roles: {roles}")
+        queries = []
+        for batch in role_batches:
+            if not batch: continue
+            
+            roles_str = " OR ".join([f'"{r}"' for r in batch])
+            roles_query_part = f"({roles_str})"
+            
+            # Add queries for this batch
+            queries.append(f'site:linkedin.com/posts "hiring" {roles_query_part} "{location}"')
+            queries.append(f'site:linkedin.com/jobs {roles_query_part} "{location}"')
+
+        logger.info(f"Running Google Search: {len(role_batches)} batches, {len(queries)} total queries (Target: ~4/hour).")
         
         for q in queries:
             try:
@@ -52,7 +77,7 @@ class GoogleSearchSource(BaseSource):
                 ).execute()
 
                 items = res.get("items", [])
-                logger.info(f"Google Search '{q}' found {len(items)} results.")
+                logger.info(f"Google Search found {len(items)} results for segment.")
 
                 for item in items:
                     lead = self._parse_item(item)
