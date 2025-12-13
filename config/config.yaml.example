@@ -1,0 +1,134 @@
+# General Configuration
+project_name: "us-tech-job-finder"
+version: "1.0.0"
+
+# Scheduling
+schedule_cron: "0 * * * *"  # Hourly
+
+# Storage
+storage:
+  google_sheets:
+    enabled: true
+    sheet_name: "Tech Job Leads"  # The name of the spreadsheet
+    credentials_path: "service_account.json" # Relative to project root
+    tabs:
+      leads: "leads"
+      seen_ids: "seen_ids"
+      applied_tracker: "applied_tracker"
+      llm_cache: "llm_cache"
+
+# Sources
+sources:
+  ats_scrapers:
+    enabled: true
+    # List of ATS domains or identifiers to focus on
+    target_ats:
+      - greenhouse
+      - lever
+      - ashby
+      - workable
+      - smartrecruiters
+      - bamboohr
+    
+  gmail_ingest:
+    enabled: true
+    user_email: "your_email@gmail.com" # For logging/filtering
+    # Path to credentials.json for Gmail API client (if using OAuth user creds)
+    # or rely on service account with domain-wide delegation (harder for personal gmail)
+    # For personal gmail, usually we use OAuth 2.0 Client ID 'credentials.json' + 'token.json'
+    credentials_path: "gmail_credentials.json"
+    search_query: "from:(linkedin.com OR indeed.com) subject:(job alert OR new jobs)"
+
+# Filters
+filters:
+  clean_architecture: true # Enforce strict structure
+  
+  geo:
+    allowed_countries: ["USA"]
+    include_remote_us: true
+    
+  roles:
+    match_score_threshold: 0.65
+    tech_role_categories:
+      - backend
+      - frontend
+      - fullstack
+      - data
+      - ml-ai
+      - devops-sre
+      - security
+      - mobile
+      - qa-automation
+      - technical-support-engineer
+      
+    include_keywords:
+      - software engineer
+      - backend
+      - frontend
+      - full stack
+      - platform
+      - infrastructure
+      - devops
+      - sre
+      - cloud
+      - data engineer
+      - data scientist
+      - machine learning
+      - ml engineer
+      - ai engineer
+      - security engineer
+      - ios
+      - android
+      - qa automation
+      - test engineer
+      - systems engineer
+      - solutions engineer
+      
+    exclude_keywords:
+      - sales
+      - sdr
+      - bdr
+      - marketing
+      - hr
+      - recruiter
+      - finance
+      - nurse
+      - teacher
+      - customer support
+      - customer success
+      - account executive
+      - legal
+      - administrative
+
+# LLM
+llm:
+  enabled: true
+  global_run_budget: 30 # Max calls per hourly run
+  max_output_tokens: 250
+  
+  # Rotation policy defined in config for flexibility
+  providers:
+    - name: "groq"
+      models: ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"]
+    - name: "openrouter"
+      models: ["anthropic/claude-3-haiku", "google/gemini-flash-1.5"]
+    - name: "huggingface"
+      models: ["mistralai/Mixtral-8x7B-Instruct-v0.1"]
+
+# Notifications
+notifications:
+  telegram:
+    enabled: true
+    bot_token_env_var: "TELEGRAM_BOT_TOKEN"
+    chat_id_env_var: "TELEGRAM_CHAT_ID"
+    alert_threshold: 0.85
+    
+  discord:
+    enabled: true
+    webhook_url_env_var: "DISCORD_WEBHOOK_URL"
+    alert_threshold: 0.85
+
+  email:
+    enabled: true
+    sender_user: "your_email@gmail.com"  # Usually same as gmail_ingest if sending via Gmail API
+    recipient_email: "your_email@gmail.com"

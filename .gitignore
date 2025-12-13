@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment & Secrets
+.env
+token.json
+credentials.json
+service_account.json
+gmail_credentials.json
+
+# Testing
+.pytest_cache/
+.coverage
+
+# OS
+.DS_Store
+
+# Logs
+*.log

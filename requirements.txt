@@ -1,0 +1,24 @@
+# Core
+pyyaml
+python-dotenv
+requests
+httpx
+beautifulsoup4
+html2text
+pydantic
+tenacity  # Robust retries if we want more than our custom one, but standardizing on custom is fine. Stick to just custom for simplicity unless needed.
+# Converting to usage of standard libraries where possible to keep it light, but pandas is good for data handling if needed, though dicts are faster for this scale.
+
+# Google
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+gspread
+
+# LLM
+openai # Generic client often used for OpenRouter/Groq
+huggingface_hub
+
+# Testing
+pytest
+pytest-mock
