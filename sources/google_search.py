@@ -61,10 +61,17 @@ class GoogleSearchSource(BaseSource):
             roles_query_part = f"({roles_str})"
             
             # Add queries for this batch
-            # Intent: Target managers/CEOs saying "hiring", "join my team", "looking for"
-            intent_phrase = '("hiring" OR "join my team" OR "looking for")'
-            queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} "{location}"')
-            queries.append(f'site:linkedin.com/jobs {roles_query_part} "{location}"')
+            # Intent: Comprehensive list of hiring signals
+            intent_phrase = '("hiring" OR "we\'re hiring" OR "we are hiring" OR "join my team" OR "job opening" OR "#hiring" OR "#jobopening")'
+            
+            # Location: US Variants + Remote
+            location_phrase = '(US OR USA OR "United States" OR "U.S." OR remote)'
+            
+            # Posts Query
+            queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} {location_phrase}')
+            
+            # Jobs Query (Standard)
+            queries.append(f'site:linkedin.com/jobs {roles_query_part} {location_phrase}')
 
         logger.info(f"Running Google Search: {len(role_batches)} batches, {len(queries)} total queries (Target: ~4/hour).")
         
