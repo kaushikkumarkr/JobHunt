@@ -75,66 +75,67 @@ class SheetsStore:
     def _ensure_tabs_exist(self):
         existing_titles = [ws.title for ws in self.sheet.worksheets()]
         
-        # Define headers for safety
-        headers_map = {
-            self.tabs["leads"]: [
-                "lead_id", "source", "captured_at_utc", "posted_at_utc", "company", "role_title", 
-                "role_category", "seniority", "employment_type", "location_raw", "city", "state", 
-                "country", "remote_type", "salary_min", "salary_max", "salary_currency", "salary_raw", 
-                "tech_stack_keywords", "description_snippet", "hiring_language_flags", "link", 
-                "apply_link", "match_score", "matched_keywords", "status", "notes"
-            ],
-            self.tabs["seen_ids"]: ["lead_id", "first_seen_at_utc"],
-            self.tabs["applied_tracker"]: ["lead_id", "applied_at_utc", "status", "notes"],
-            self.tabs["llm_cache"]: ["text_hash", "llm_output", "created_at_utc", "model_used"]
-        }
+        # We ONLY care about the 'leads' tab now.
+        leads_tab = self.tabs["leads"]
+        
+        # Define headers
+        headers = [
+            "lead_id", "source", "captured_at_utc", "posted_at_utc", "company", "role_title", 
+            "role_category", "seniority", "employment_type", "location_raw", "city", "state", 
+            "country", "remote_type", "salary_min", "salary_max", "salary_currency", "salary_raw", 
+            "tech_stack_keywords", "description_snippet", "hiring_language_flags", "link", 
+            "apply_link", "match_score", "matched_keywords", "status", "notes"
+        ]
 
-        for tab_key, tab_name in self.tabs.items():
-            if tab_name not in existing_titles:
-                logger.info(f"Creating tab '{tab_name}'")
-                ws = self.sheet.add_worksheet(title=tab_name, rows=1000, cols=30)
-                # Init headers
-                if tab_name in headers_map:
-                    ws.append_row(headers_map[tab_name])
-            else:
-                # Optional: Check headers if needed, but risky to overwrite
-                pass
+        if leads_tab not in existing_titles:
+            logger.info(f"Creating tab '{leads_tab}'")
+            ws = self.sheet.add_worksheet(title=leads_tab, rows=1000, cols=30)
+            ws.append_row(headers)
 
     def load_seen_ids(self) -> Set[str]:
-        """Load all lead IDs from the seen_ids tab to memory for fast deduping."""
-        ws = self.sheet.worksheet(self.tabs["seen_ids"])
-        # Assuming lead_id is column 1 (index 0)
-        # Get all values from col 1, skipping header
+        """Load seen IDs directly from the 'leads' tab to avoid managing a second tab."""
+        ws = self.sheet.worksheet(self.tabs["leads"])
         try:
-            ids = ws.col_values(1)[1:] 
+            # Assume lead_id is column 1 (index 0)
+            # Fetch all values in column 1
+            ids = ws.col_values(1)
+            if ids:
+                # Remove header if present
+                if ids[0] == "lead_id":
+                    ids = ids[1:]
             return set(ids)
         except Exception as e:
-            logger.warning(f"Error loading seen_ids: {e}")
+            logger.warning(f"Error loading seen_ids from leads tab: {e}")
             return set()
 
     def add_seen_ids(self, new_ids: List[str]):
-        """Batch append new seen IDs."""
-        if not new_ids:
-            return
-        
-        ws = self.sheet.worksheet(self.tabs["seen_ids"])
-        now = datetime.utcnow().isoformat()
-        rows = [[lid, now] for lid in new_ids]
-        ws.append_rows(rows)
+        """No-op: We now persist IDs naturally when appending the lead itself."""
+        pass
 
     def append_leads(self, leads: List[Dict[str, Any]]):
         """Append new leads to the leads tab."""
         if not leads:
             return
-
+            
         ws = self.sheet.worksheet(self.tabs["leads"])
+        # We need headers to know order, but we can assume the configured order or read it
+        # Safest is to read current headers
         headers = ws.row_values(1)
+        if not headers:
+             # Fallback if empty
+            headers = [
+                "lead_id", "source", "captured_at_utc", "posted_at_utc", "company", "role_title", 
+                "role_category", "seniority", "employment_type", "location_raw", "city", "state", 
+                "country", "remote_type", "salary_min", "salary_max", "salary_currency", "salary_raw", 
+                "tech_stack_keywords", "description_snippet", "hiring_language_flags", "link", 
+                "apply_link", "match_score", "matched_keywords", "status", "notes"
+            ]
         
         rows_to_add = []
         for lead in leads:
             row = []
             for h in headers:
-                row.append(str(lead.get(h, ""))) # Ensure string conversion for safety
+                row.append(str(lead.get(h, "")))
             rows_to_add.append(row)
             
         ws.append_rows(rows_to_add)

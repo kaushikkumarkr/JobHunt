@@ -12,6 +12,7 @@ from utils.logging import setup_logging
 from storage.sheets_store import SheetsStore
 from sources.ats_scrapers import ATSScraper
 from sources.gmail_ingest import GmailIngestSource
+from sources.google_search import GoogleSearchSource
 from normalizers.location_parser import LocationParser
 from filters.tech_filter import TechFilter
 from llm.manager import LLMManager
@@ -52,6 +53,15 @@ def main():
         logger.info("Fetching ATS leads...")
         all_raw_leads.extend(ats_source.fetch_leads())
         
+    # Google Search
+    if config["sources"]["google_search"]["enabled"]:
+        logger.info("Fetching Google Search leads...")
+        try:
+            google_source = GoogleSearchSource()
+            all_raw_leads.extend(google_source.fetch_leads())
+        except Exception as e:
+            logger.error(f"Google Search failed: {e}")
+
     # Gmail
     if config["sources"]["gmail_ingest"]["enabled"]:
         logger.info("Fetching Gmail leads...")
