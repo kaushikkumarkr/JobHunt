@@ -75,6 +75,7 @@ class ATSScraper(BaseSource):
             queries = [
                 'software engineer jobs "greenhouse.io" "united states"',
                 'software engineer jobs "lever.co" "united states"',
+                'site:linkedin.com/jobs "software engineer" "united states"',
             ]
             
             with DDGS() as ddgs:
@@ -86,7 +87,16 @@ class ATSScraper(BaseSource):
                             link = res['href']
                             title = res['title']
                             snippet = res['body']
-                            s_type = "greenhouse" if "greenhouse.io" in link else "lever" if "lever.co" in link else "unknown"
+                            
+                            s_type = "unknown"
+                            if "greenhouse.io" in link: s_type = "greenhouse"
+                            elif "lever.co" in link: s_type = "lever"
+                            elif "linkedin.com" in link: s_type = "linkedin"
+
+                            # Clean LinkedIn titles (often "Hiring Software Engineer | LinkedIn")
+                            if s_type == "linkedin":
+                                title = title.split("|")[0].strip()
+                                title = title.replace("Hiring", "").strip()
                             
                             lead = JobLead(
                                 source=f"{s_type}_search",
@@ -97,6 +107,7 @@ class ATSScraper(BaseSource):
                                 location_raw="United States"
                             )
                             leads.append(lead)
+                            
                     except Exception as e:
                         logger.warning(f"DDG Search failed for {q}: {e}")
         except Exception as e:
