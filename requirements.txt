@@ -22,3 +22,7 @@ huggingface_hub
 # Testing
 pytest
 pytest-mock
+
+# Discovery
+feedparser
+duckduckgo-search

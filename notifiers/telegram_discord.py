@@ -11,11 +11,6 @@ class InstantNotifier:
     def __init__(self):
         self.config = get_config()
         
-        # Telegram
-        self.tg_enabled = self.config["notifications"]["telegram"]["enabled"]
-        self.tg_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-        self.tg_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-        
         # Discord
         self.discord_enabled = self.config["notifications"]["discord"]["enabled"]
         self.discord_webhook = os.environ.get("DISCORD_WEBHOOK_URL")
@@ -23,9 +18,6 @@ class InstantNotifier:
     def notify(self, lead: JobLead):
         """Send instant notification for a single high-value lead."""
         msg = self._format_message(lead)
-        
-        if self.tg_enabled and self.tg_token and self.tg_chat_id:
-            self._send_telegram(msg)
             
         if self.discord_enabled and self.discord_webhook:
             self._send_discord(msg)
@@ -41,14 +33,6 @@ class InstantNotifier:
             f"**Link:** [Apply Here]({lead.link})\n"
             f"**Why:** {lead.matched_keywords}"
         )
-
-    def _send_telegram(self, text: str):
-        try:
-            url = f"https://api.telegram.org/bot{self.tg_token}/sendMessage"
-            payload = {"chat_id": self.tg_chat_id, "text": text, "parse_mode": "Markdown"}
-            requests.post(url, json=payload, timeout=5)
-        except Exception as e:
-            logger.error(f"Telegram fail: {e}")
 
     def _send_discord(self, text: str):
         try:

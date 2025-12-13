@@ -56,10 +56,20 @@ class SheetsStore:
         return gspread.authorize(creds)
 
     def _get_or_create_sheet(self):
+        # 1. Try opening by ID (Best practice)
+        sheet_id = os.environ.get("SHEET_ID")
+        if sheet_id:
+            try:
+                return self.client.open_by_key(sheet_id)
+            except Exception as e:
+                logger.error(f"Failed to open sheet by ID: {e}")
+                # Fallthrough
+
+        # 2. Try opening by name
         try:
             return self.client.open(self.sheet_name)
         except gspread.SpreadsheetNotFound:
-            logger.info(f"Sheet '{self.sheet_name}' not found. Creating new one.")
+            logger.info(f"Sheet '{self.sheet_name}' not found. Attempting create.")
             return self.client.create(self.sheet_name)
 
     def _ensure_tabs_exist(self):

@@ -118,10 +118,7 @@ llm:
 # Notifications
 notifications:
   telegram:
-    enabled: true
-    bot_token_env_var: "TELEGRAM_BOT_TOKEN"
-    chat_id_env_var: "TELEGRAM_CHAT_ID"
-    alert_threshold: 0.85
+    enabled: false
     
   discord:
     enabled: true

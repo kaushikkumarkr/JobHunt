@@ -33,16 +33,113 @@ class ATSScraper(BaseSource):
 
     def fetch_leads(self) -> List[JobLead]:
         leads = []
+        
+        # 1. Scraping Configured Targets
         for target in self.targets:
             try:
-                if target["type"] == "greenhouse":
-                    leads.extend(self._parse_greenhouse(target))
-                elif target["type"] == "lever":
-                    leads.extend(self._parse_lever(target))
-                # Add others...
+                leads.extend(self._scrape_target(target))
             except Exception as e:
                 logger.error(f"Failed to scrape {target['name']}: {e}")
+                
+        # 2. Dynamic Discovery (The "Search" feature)
+        # We assume if targets is empty or always, we might want to discover.
+        # Let's do discovery for "Software Engineer" on ATS sites
+        discovered_leads = self._discover_leads()
+        leads.extend(discovered_leads)
+        
         return leads
+
+    def _scrape_target(self, target: Dict[str, str]) -> List[JobLead]:
+        if target["type"] == "greenhouse":
+            return self._parse_greenhouse(target)
+        elif target["type"] == "lever":
+            return self._parse_lever(target)
+        return []
+
+        return leads
+
+    def _discover_leads(self) -> List[JobLead]:
+        """Combine DDG Search and RSS Feeds for discovery."""
+        leads = []
+        
+        # 1. RSS Feeds (Most Reliable)
+        try:
+            leads.extend(self._discover_rss())
+        except Exception as e:
+            logger.error(f"RSS Discovery failed: {e}")
+
+        # 2. DDG Search (Supplementary)
+        try:
+            from duckduckgo_search import DDGS
+            logger.info("Running Smart Discovery via DuckDuckGo...")
+            queries = [
+                'software engineer jobs "greenhouse.io" "united states"',
+                'software engineer jobs "lever.co" "united states"',
+            ]
+            
+            with DDGS() as ddgs:
+                for q in queries:
+                    try:
+                        results = list(ddgs.text(q, max_results=5, region='us-en'))
+                        logger.info(f"Query '{q}' returned {len(results)} results.")
+                        for res in results:
+                            link = res['href']
+                            title = res['title']
+                            snippet = res['body']
+                            s_type = "greenhouse" if "greenhouse.io" in link else "lever" if "lever.co" in link else "unknown"
+                            
+                            lead = JobLead(
+                                source=f"{s_type}_search",
+                                company=self._extract_company_from_title(title),
+                                role_title=title,
+                                link=link,
+                                description_snippet=snippet,
+                                location_raw="United States"
+                            )
+                            leads.append(lead)
+                    except Exception as e:
+                        logger.warning(f"DDG Search failed for {q}: {e}")
+        except Exception as e:
+            logger.warning(f"DDG module failed: {e}")
+                    
+        return leads
+
+    def _discover_rss(self) -> List[JobLead]:
+        import feedparser
+        logger.info("Running Smart Discovery via RSS Feeds...")
+        leads = []
+        feeds = [
+            # "https://remoteok.com/rss", # Often has cloudflare
+            "https://weworkremotely.com/categories/remote-programming-jobs.rss",
+            "https://weworkremotely.com/categories/remote-back-end-programming-jobs.rss"
+        ]
+        
+        for url in feeds:
+            try:
+                feed = feedparser.parse(url)
+                logger.info(f"Fetched RSS {url}: Found {len(feed.entries)} entries.")
+                for entry in feed.entries:
+                    lead = JobLead(
+                        source="rss_feed",
+                        company=entry.get("author", "Unknown"),
+                        role_title=entry.title,
+                        link=entry.link,
+                        description_snippet=entry.summary[:500] if hasattr(entry, "summary") else "",
+                        location_raw="Remote",
+                        posted_at_utc=entry.published if hasattr(entry, "published") else ""
+                    )
+                    leads.append(lead)
+            except Exception as e:
+                logger.warning(f"Failed to parse RSS {url}: {e}")
+        return leads
+
+    def _extract_company_from_title(self, title: str) -> str:
+        # Titles are often "Software Engineer at Acme" or "Acme - Software Engineer"
+        if " at " in title:
+            return title.split(" at ")[-1].strip()
+        if " - " in title:
+            return title.split(" - ")[0].strip()
+        return "Unknown Company"
 
     def _parse_greenhouse(self, target) -> List[JobLead]:
         html = self._get_page(target["url"])

@@ -1,6 +1,11 @@
 import logging
 import hashlib
+import os
+from dotenv import load_dotenv
 from typing import List
+
+# Load env immediately
+load_dotenv()
 
 from config.loader import get_config
 from utils.logging import setup_logging
@@ -103,7 +108,12 @@ def main():
         seen_ids.add(lid) # Update local set to avoid double counting in same run
         
         # Note high value
-        if lead.match_score >= config["notifications"]["telegram"]["alert_threshold"]:
+        # Fallback to discord threshold or default 0.85
+        threshold = 0.85
+        if "discord" in config["notifications"] and "alert_threshold" in config["notifications"]["discord"]:
+             threshold = config["notifications"]["discord"]["alert_threshold"]
+        
+        if lead.match_score >= threshold:
             high_value_leads.append(lead)
 
     # 5. Persist
