@@ -38,10 +38,24 @@ class SheetsStore:
         
         if env_creds_b64:
             try:
-                creds_json = json.loads(base64.b64decode(env_creds_b64).decode('utf-8'))
+                # Heuristic: If it looks like JSON, assume user pasted raw JSON
+                if env_creds_b64.strip().startswith("{") and "private_key" in env_creds_b64:
+                     logger.info("Detected raw JSON in secrets, skipping Base64 decode.")
+                     creds_json = json.loads(env_creds_b64)
+                else:
+                     # Standard path: Base64 decode
+                     # Handle potential newlines from copy-paste
+                     cleaned_b64 = env_creds_b64.strip().replace("\n", "").replace("\r", "")
+                     decoded_bytes = base64.b64decode(cleaned_b64)
+                     creds_string = decoded_bytes.decode('utf-8')
+                     creds_json = json.loads(creds_string)
+                
                 creds = Credentials.from_service_account_info(creds_json, scopes=SCOPES)
+            
             except Exception as e:
-                logger.error(f"Failed to load credentials from env var: {e}")
+                # Log snippet for debug (safe length)
+                safe_snippet = env_creds_b64[:10] + "..." if env_creds_b64 else "Empty"
+                logger.error(f"Failed to load credentials from env var (Start: {safe_snippet}). Error: {e}")
         
         if not creds and os.path.exists(creds_path):
              creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
