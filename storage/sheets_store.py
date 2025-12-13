@@ -109,11 +109,12 @@ class SheetsStore:
         
         # Define headers
         headers = [
-            "lead_id", "source", "captured_at_utc", "posted_at_utc", "company", "role_title", 
-            "role_category", "seniority", "employment_type", "location_raw", "city", "state", 
-            "country", "remote_type", "salary_min", "salary_max", "salary_currency", "salary_raw", 
-            "tech_stack_keywords", "description_snippet", "hiring_language_flags", "link", 
-            "apply_link", "match_score", "matched_keywords", "status", "notes"
+            "lead_id", "source", "captured_at_utc", "posted_at_utc", "match_score", "link", 
+            "company", "role_title", "role_category", "seniority", "employment_type", 
+            "location_raw", "city", "state", "country", "remote_type", "salary_min", 
+            "salary_max", "salary_currency", "salary_raw", "tech_stack_keywords", 
+            "description_snippet", "hiring_language_flags", "apply_link", 
+            "matched_keywords", "status", "notes"
         ]
 
         if leads_tab not in existing_titles:
