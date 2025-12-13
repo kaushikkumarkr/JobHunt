@@ -43,19 +43,33 @@ class GoogleSearchSource(BaseSource):
         # Split roles into 2 chunks if possible to get better/more specific results
         # instead of one giant OR query that might dilute detailed matches.
         
-        chunk_size = (len(roles) + 1) // 2
-        role_batches = [roles[i:i + chunk_size] for i in range(0, len(roles), chunk_size)]
+        # 🧠 SMART ROTATION:
+        # Instead of running ALL roles every hour (which kills quota),
+        # we rotate through them.
+        # Hour 0: Batch 1
+        # Hour 1: Batch 2
+        # Hour 2: Batch 3 ...
         
-        # Ensure we don't exceed 2 batches (4 queries) even if list is huge, 
-        # to respect the 100/day limit strictly.
-        if len(role_batches) > 2:
-            # Fallback: flatten back to 2 chunks if math goes weird or list is tiny
-            mid = len(roles) // 2
-            role_batches = [roles[:mid], roles[mid:]]
+        # 1. Break roles into smaller chunks of 3 (for high precision)
+        chunk_size = 3
+        all_batches = [roles[i:i + chunk_size] for i in range(0, len(roles), chunk_size)]
+        
+        if not all_batches: return []
+
+        # 2. Pick ONE batch based on the current hour
+        import datetime
+        current_hour = datetime.datetime.now().hour
+        batch_index = current_hour % len(all_batches)
+        
+        active_batch = all_batches[batch_index]
+        logger.info(f"🔄 Role Rotation: Hour {current_hour} -> Running Batch {batch_index+1}/{len(all_batches)}: {active_batch}")
 
         queries = []
+        # We process ONLY the active batch
+        role_batches = [active_batch] 
+        
         for batch in role_batches:
-            if not batch: continue
+             if not batch: continue
             
             roles_str = " OR ".join([f'"{r}"' for r in batch])
             roles_query_part = f"({roles_str})"
