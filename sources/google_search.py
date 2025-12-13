@@ -3,6 +3,7 @@ import os
 from typing import List, Dict
 from googleapiclient.discovery import build
 from sources.base import BaseSource, JobLead
+from config.loader import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -24,25 +25,29 @@ class GoogleSearchSource(BaseSource):
             logger.info("Google Search credentials missing. Skipping.")
             return []
 
+        self.config = get_config() # Ensure config is loaded
+        
+        roles = self.config["sources"]["google_search"].get("roles", ["Software Engineer"])
+        location = self.config["sources"]["google_search"].get("location", "United States")
+        
+        queries = []
         leads = []
-        # We want recent posts (past 24h) about hiring
-        # dateRestrict='d1' forces last 24 hours
-        queries = [
-            'site:linkedin.com/posts "hiring" "software engineer" "united states"',
-            'site:linkedin.com/jobs "software engineer" "united states"',
-            # We can also add other sites if needed
-            # 'site:twitter.com "hiring" "software engineer" "remote"'
-        ]
+        for role in roles:
+             # Add specific queries for each role
+             queries.append(f'site:linkedin.com/posts "hiring" "{role}" "{location}"')
+             queries.append(f'site:linkedin.com/jobs "{role}" "{location}"')
 
-        logger.info("Running Smart Discovery via Google Custom Search...")
+        logger.info(f"Running Google Custom Search for roles: {roles}")
         
         for q in queries:
             try:
+                # We fetch top 10 results for EACH query.
                 res = self.service.cse().list(
                     q=q, 
                     cx=self.cse_id,
-                    dateRestrict='h2', # Last 2 hours only (matches hourly run schedule)
-                    sort='date',       # Explicitly sort by date
+                    # Recency: Last 2 hours to catch "just now" posts
+                    dateRestrict='h2', 
+                    sort='date',
                     num=10
                 ).execute()
 
@@ -65,7 +70,7 @@ class GoogleSearchSource(BaseSource):
             snippet = item.get("snippet", "")
             title = item.get("title", "")
             
-            # Basic dedupe/filter
+            # Strict Filter: Only LinkedIn for now as requested
             if "linkedin.com" not in target_link:
                 return None
 

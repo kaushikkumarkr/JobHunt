@@ -36,11 +36,13 @@ sources:
     
   google_search:
     enabled: true
-    # Add specific configuration for google_search here, e.g.:
-    # api_key_env_var: "GOOGLE_SEARCH_API_KEY"
-    # cse_id_env_var: "GOOGLE_SEARCH_CSE_ID"
-    # search_query_template: "site:linkedin.com/jobs OR site:indeed.com/jobs {{role}} {{location}}"
-    # max_results_per_query: 10
+    # The roles you want to search for
+    roles:
+      - "Software Engineer"
+      - "Full Stack Developer"
+      - "Backend Engineer"
+    # The location to append to queries
+    location: "United States"
     
   # The following lines were part of the original gmail_ingest and seem to have been
   # mistakenly included in the google_search snippet provided in the instruction.
