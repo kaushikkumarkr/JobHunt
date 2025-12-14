@@ -119,8 +119,14 @@ class GoogleSearchSource(BaseSource):
         for q in queries:
             while True:  # Retry loop for rate limits
                 try:
-                    # We fetch top 10 results for EACH query.
-                    res = self.service.cse().list(
+                    # 🚀 UNLIMITED POWER: Use Site Restricted API (10k/day)
+                    # User confirmed they have disabled "entire web" and added specific sites.
+                    search_service = self.service.cse().siterestrict() 
+                    
+                    # Note: If this fails with 403/400, it means the CSE is not properly restricted.
+                    # We can add a fallback catch later, but for now we go ALL IN.
+                    
+                    res = search_service.list(
                         q=q, 
                         cx=self.cse_id,
                         # Recency: Last 24 hours (1 day) to increase volume
