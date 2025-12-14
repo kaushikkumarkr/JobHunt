@@ -105,7 +105,7 @@ class GoogleSearchSource(BaseSource):
                  # Generate creative queries for ALL role batches, not just the first one
                  for batch_roles in role_batches:
                      ai_queries = llm.generate_search_queries(batch_roles, intent_phrase)
-                     for aq in ai_queries:
+                     for aq in ai_queries[:1]: # Limit to 1 AI query/hr to stay under 100/day (3 static + 1 AI = 96)
                          # Safety: Ensure they target linkedin/US to avoid waste
                          if "site:" not in aq: aq = f"site:linkedin.com/posts {aq}"
                          if "United States" not in aq and "USA" not in aq: aq += ' "United States"'
