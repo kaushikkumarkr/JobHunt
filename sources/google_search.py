@@ -119,31 +119,15 @@ class GoogleSearchSource(BaseSource):
         for q in queries:
             while True:  # Retry loop for rate limits
                 try:
-                    # 🚀 UNLIMITED POWER: Use Site Restricted API (10k/day)
-                    try:
-                        search_service = self.service.cse().siterestrict()
-                        res = search_service.list(
-                            q=q, 
-                            cx=self.cse_id,
-                            dateRestrict='d1', 
-                            sort='date',
-                            lr='lang_en', 
-                            num=10
-                        ).execute()
-                    except HttpError as restricted_err:
-                        # If Restricted fails (403/400 often means "Not configured correctly"), fallback to Normal
-                        if restricted_err.resp.status in [400, 403, 404]:
-                            logger.warning(f"⚠️ Site Restricted API failed ({restricted_err.resp.status}). Falling back to Standard Quota.")
-                            res = self.service.cse().list(
-                                q=q, 
-                                cx=self.cse_id,
-                                dateRestrict='d1', 
-                                sort='date',
-                                lr='lang_en', 
-                                num=10
-                            ).execute()
-                        else:
-                            raise restricted_err # Re-raise if it's a real 429 or other error
+                    # Standard API Call (100 queries/day)
+                    res = self.service.cse().list(
+                        q=q, 
+                        cx=self.cse_id,
+                        dateRestrict='d1', 
+                        sort='date',
+                        lr='lang_en', 
+                        num=10
+                    ).execute()
 
                     items = res.get("items", [])
                     logger.info(f"Google Search found {len(items)} results for segment.")
