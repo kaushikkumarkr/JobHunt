@@ -82,16 +82,19 @@ class GoogleSearchSource(BaseSource):
             # Location: STRICT US Only (Removed broad 'remote' which captures global)
             location_phrase = '("United States" OR "USA" OR "U.S.")'
             
+            # Negative Keywords (Explicitly block common leaks)
+            negative_phrase = '-India -UK -London -Canada -Europe -Germany -France -Berlin -Paris -Bangalore -Delhi -Mumbai -Ontario -Toronto'
+            
             # Posts Query (LinkedIn Human Signals)
-            queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} {location_phrase}')
+            queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} {location_phrase} {negative_phrase}')
             
             # Jobs Query (Standard LinkedIn)
-            queries.append(f'site:linkedin.com/jobs {roles_query_part} {location_phrase}')
+            queries.append(f'site:linkedin.com/jobs {roles_query_part} {location_phrase} {negative_phrase}')
             
             # 🚀 THE REDDIT HACK: Universal ATS Search
             # Finds ANY company's Greenhouse/Lever/Ashby page posted in last 24h
             ats_sites = '(site:boards.greenhouse.io OR site:jobs.lever.co OR site:jobs.ashbyhq.com OR site:myworkdayjobs.com OR site:apply.workable.com)'
-            queries.append(f'{ats_sites} {roles_query_part} {location_phrase} intext:"apply"')
+            queries.append(f'{ats_sites} {roles_query_part} {location_phrase} {negative_phrase} intext:"apply"')
 
         # ---------------------------------------------------------
         # 🧠 DYNAMIC AI QUERY GENERATION
