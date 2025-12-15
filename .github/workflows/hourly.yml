@@ -2,7 +2,7 @@ name: Hourly-US-Tech-Job-Finder
 
 on:
   schedule:
-    - cron: "0 * * * *"  # Run every hour
+    - cron: "17 * * * *"  # Run at minute 17 to avoid top-of-hour congestion
   workflow_dispatch:      # Allow manual trigger
 
 jobs:
