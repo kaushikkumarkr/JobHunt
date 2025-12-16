@@ -103,7 +103,7 @@ async def main_async():
         if allowed:
             # If parser found a country, and it is NOT in allowed list -> DROP
             if loc_data["country"] and loc_data["country"] not in allowed:
-                # logger.info(f"Skipping {lead.company} (Country: {loc_data['country']})")
+                logger.info(f"🚫 Geo-Drop: {lead.company} ({lead.location_raw}) -> Not in Allowed Hubs/Country")
                 continue
             
             # If parser matched "is_us": False -> DROP
