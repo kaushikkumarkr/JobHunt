@@ -185,6 +185,7 @@ class LLMManager:
             
         except Exception as e:
             logger.error(f"Error parsing LLM response for {lead.lead_id}: {e}")
+            return lead
     def generate_search_queries(self, roles: List[str], intent_phrases: str) -> List[str]:
         """
         Generates creative, dynamic boolean queries to find hidden gems.
