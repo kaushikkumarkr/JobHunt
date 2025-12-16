@@ -63,6 +63,12 @@ For local run, use `.env` file. For GitHub Actions, set these in Repository Secr
 - `EMAIL_APP_PASSWORD`: For sending emails via SMTP.
 - `GROQ_API_KEY` etc: If using LLM.
 
+### 3.5 Google Search Configuration (Important)
+1. Go to [Programmable Search Engine Console](https://programablesearchengine.google.com/controlpanel/all).
+2. Select your engine -> Overview.
+3. **Turn ON** "Search the entire web". (Required for Standard API).
+4. **Note**: The system is optimized to use **96 queries/day** (staying under the free 100/day limit).
+
 ### 4. Running Locally
 ```bash
 pip install -r requirements.txt
