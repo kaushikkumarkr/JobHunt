@@ -5,6 +5,9 @@ class LocationParser:
         # 1. MAJOR TECH HUBS ALLOWLIST (STRICT)
         # User requested: "NY, NJ, major cities"
         self.allowed_hubs = [
+            # Generic US (Re-enabled to fix "0 leads" issue, relying on -India query blocker)
+            r"united states", r"usa", r"us", r"remote",
+
             # New York Area
             r"new york", r"ny", r"nyc", r"manhattan", r"brooklyn", r"new jersey", r"nj", r"jersey city", r"hoboken",
             
