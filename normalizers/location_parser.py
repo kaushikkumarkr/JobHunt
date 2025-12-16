@@ -2,37 +2,39 @@ import re
 
 class LocationParser:
     def __init__(self):
-        # Allowlist: Strictly US Indicators
-        # Matches "United States", "USA", "U.S.", "US" (as word)
-        self.us_country_indicators = [
-            r"\bunited states\b", r"\busa\b", r"\bu\.s\.\b", r"\bu\.s\b", r"\bus\b"
-        ]
-        
-        self.us_state_codes = [
-            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", 
-            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
-            "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
-            "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
-            "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
-            "DC"
-        ]
-        
-        self.us_state_names = [
-            "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware", "florida", "georgia",
-            "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine", "maryland",
-            "massachusetts", "michigan", "minnesota", "mississippi", "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey",
-            "new mexico", "new york", "north carolina", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island", "south carolina",
-            "south dakota", "tennessee", "texas", "utah", "vermont", "virginia", "washington", "west virginia", "wisconsin", "wyoming",
-            "district of columbia"
+        # 1. MAJOR TECH HUBS ALLOWLIST (STRICT)
+        # User requested: "NY, NJ, major cities"
+        self.allowed_hubs = [
+            # New York Area
+            r"new york", r"ny", r"nyc", r"manhattan", r"brooklyn", r"new jersey", r"nj", r"jersey city", r"hoboken",
+            
+            # Bay Area / California
+            r"san francisco", r"sf", r"bay area", r"palo alto", r"mountain view", r"sunnyvale", r"menlo park", 
+            r"santa clara", r"san jose", r"cupertino", r"redwood city", r"los angeles", r"la", r"san diego", r"california", r"ca",
+            
+            # Seattle Area
+            r"seattle", r"redmond", r"bellevue", r"washington", r"wa",
+            
+            # Texas
+            r"austin", r"dallas", r"houston", r"texas", r"tx",
+            
+            # East Coast / Other
+            r"boston", r"cambridge", r"massachusetts", r"ma",
+            r"chicago", r"illinois", r"il",
+            r"denver", r"boulder", r"colorado", r"co",
+            r"washington dc", r"d\.c\.", r"virginia", r"va", r"maryland", r"md"
         ]
 
-        # Blocklist: Explicit Foreign indicators (to override vague matches)
+        # Blocklist: Explicit Foreign indicators (Strict Global Filter)
         self.foreign_indicators = [
             "india", "uk", "united kingdom", "london", "canada", "toronto", "vancouver", "ontario", 
             "germany", "berlin", "munich", "france", "paris", "spain", "madrid", "barcelona", 
             "australia", "sydney", "melbourne", "china", "japan", "tokyo", "singapore", 
             "brazil", "mexico", "dubai", "uae", "netherlands", "amsterdam", "sweden", "stockholm",
-            "bangalore", "mumbai", "delhi", "hyderabad", "pune", "chennai" # Common Indian tech hubs
+            
+            # India Specific Leakage Blockers
+            "bangalore", "mumbai", "delhi", "hyderabad", "pune", "chennai", "gurgaon", "noida", "kolkata", "ahmedabad",
+            "emea", "apac", "latam"
         ]
         
     def parse(self, raw_location: str) -> dict:
@@ -59,9 +61,9 @@ class LocationParser:
             remote_type = "onsite" 
 
         # ---------------------------------------------------------
-        # STRICT LOCATION FILTERING (US ONLY)
+        # STRICT HUB FILTERING (Major US Cities Only)
         # ---------------------------------------------------------
-        is_us = False 
+        is_allowed = False 
         
         # 1. IMMEDIATE FAIL: If explicit foreign country/city present
         for foreign in self.foreign_indicators:
@@ -71,45 +73,26 @@ class LocationParser:
                     'remote_type': remote_type, 'is_us': False
                 }
 
-        # 2. CHECK PASS: Must match US Indicator OR US State
-        
-        # Check Country ("United States", "USA", "US")
-        for indicator in self.us_country_indicators:
-            if re.search(indicator, raw):
-                is_us = True
-                break
-                
-        # Check State Name ("California", "New York")
-        if not is_us:
-            for state_name in self.us_state_names:
-                if re.search(rf"\b{state_name}\b", raw):
-                    is_us = True
+        # 2. CHECK PASS: Must match a Major Tech Hub
+        for hub in self.allowed_hubs:
+            # Word boundary check is risky for abbreviations like "NY", but necessary for "CA" vs "Africa"
+            # We use loose matching for long names ("new york") and strict for short codes
+            
+            if len(hub.replace("\\", "")) <= 2: 
+                # Strict boundary for short codes (NY, CA, WA)
+                if re.search(rf"\b{hub}\b", raw):
+                    is_allowed = True
+                    break
+            else:
+                # Loose matching for city names ("san francisco")
+                if hub in raw:
+                    is_allowed = True
                     break
 
-        # Check State Code ("San Francisco, CA", "Seattle WA")
-        if not is_us:
-            upper_raw = raw_location.upper() # Use original case for state codes
-            for code in self.us_state_codes:
-                # Regex looks for ", CA" or " CA " or "NY" at end of string
-                # \b matches word boundary.
-                if re.search(rf"\b{code}\b", upper_raw):
-                    is_us = True
-                    break
-
-        # ---------------------------------------------------------
-
-        # State detection for saving (Extract the code)
-        state_extracted = ""
-        upper_raw = raw_location.upper()
-        for code in self.us_state_codes:
-            if re.search(rf"\b{code}\b", upper_raw):
-                state_extracted = code
-                break
-                
         return {
             'city': "Unknown", 
-            'state': state_extracted,
-            'country': "USA" if is_us else "Unknown",
+            'state': "Hub",
+            'country': "USA" if is_allowed else "Unknown",
             'remote_type': remote_type,
-            'is_us': is_us
+            'is_us': is_allowed
         }

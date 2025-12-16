@@ -83,7 +83,7 @@ class GoogleSearchSource(BaseSource):
             location_phrase = '("United States" OR "USA" OR "U.S.")'
             
             # Negative Keywords (Explicitly block common leaks)
-            negative_phrase = '-India -UK -London -Canada -Europe -Germany -France -Berlin -Paris -Bangalore -Delhi -Mumbai -Ontario -Toronto'
+            negative_phrase = '-India -UK -London -Canada -Europe -Germany -France -Berlin -Paris -Bangalore -Delhi -Mumbai -Hyderabad -Pune -Chennai -Gurgaon -Noida -Ontario -Toronto'
             
             # Posts Query (LinkedIn Human Signals)
             queries.append(f'site:linkedin.com/posts {intent_phrase} {roles_query_part} {location_phrase} {negative_phrase}')
