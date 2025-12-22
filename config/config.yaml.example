@@ -86,6 +86,8 @@ sources:
     roles:
       - "AI Engineer"
       - "Generative AI Engineer"
+      - "AI Product Manager"
+      - "Product Manager"
       - "Data Scientist"
       - "Data Analyst"
       - "Machine Learning Engineer"
@@ -142,6 +144,8 @@ filters:
       - rag
       - python
       - sql
+      - product manager
+      - technical product manager
       
     exclude_keywords:
       - sales
