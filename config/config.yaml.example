@@ -84,16 +84,11 @@ sources:
     enabled: true
     # The roles you want to search for
     roles:
-      - "Data Science Engineer"
-      - "Machine Learning Engineer"
       - "AI Engineer"
-      - "Product Manager"
+      - "Generative AI Engineer"
+      - "Data Scientist"
       - "Data Analyst"
-      - "Business Analyst"
-      - "Data Engineer"
-      - "Software Engineer"
-      - "Full Stack Developer"
-      - "Backend Engineer"
+      - "Machine Learning Engineer"
     # The location to append to queries
     location: "United States"
     
@@ -131,32 +126,22 @@ filters:
       - business
       
     include_keywords:
-      - software engineer
-      - backend
-      - frontend
-      - full stack
-      - platform
-      - infrastructure
-      - devops
-      - sre
-      - cloud
-      - data engineer
-      - data scientist
-      - machine learning
-      - ml engineer
       - ai engineer
-      - security engineer
-      - ios
-      - android
-      - qa automation
-      - test engineer
-      - systems engineer
-      - solutions engineer
-      - product manager
-      - product owner
-      - business analyst
+      - generative ai
+      - llm
+      - machine learning
+      - deep learning
+      - data scientist
       - data analyst
-      - analytics
+      - data engineer
+      - nlp
+      - computer vision
+      - pytorch
+      - tensorflow
+      - transformer
+      - rag
+      - python
+      - sql
       
     exclude_keywords:
       - sales
